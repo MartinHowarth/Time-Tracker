@@ -1,0 +1,11 @@
+- Add output to .csv or excel
+- Add prompt that auto-appears on schedule
+
+- scrollbar
+- lock task panel in scroll
+
+- Able to archive tasks (removes from display, but stores the info)
+
+- Save and reload
+
+- Add comments and logging
