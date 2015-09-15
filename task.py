@@ -1,149 +1,63 @@
-import Tkinter
-import timeslot
-from collections import defaultdict
-import logging
+import week
 
 
-class Task(Tkinter.Frame):
-    """
-    Single task. May have sub tasks.
-    Receives one entry per week to track general time spent on a given task.
-    """
-    _task_id_counter = 1
-
-    def __init__(self, top_level_frame, name):
+class Task(object):
+    def __init__(self, name, first_week_id, subtasks=None, weeks=None, archived=False):
         """
-
-        :param Tracker top_level_frame: Main tracker object. Also a Tkinter
-            Frame. This is the highest level frame we put things in.
-        :param str name: Task name.
+        Task object. Stores time tracking about a task for all weeks.
+        :param str name: Name of this task
+        :param first_week_id: ID of the first week that this task appears.
+        :param list subtasks: Name of each subtask, in order to be displayed.
+        :param list weeks: List of lists. Each list is the time spent on
+            corresponding subtasks in that week.
+        :param bool archived: Whether this task is to be displayed or not.
         :return:
         """
-        logging.debug("Creating Task %s" % name)
-        Tkinter.Frame.__init__(self,
-                               top_level_frame,
-                               borderwidth=2,
-                               relief=Tkinter.GROOVE)
-        self.name = name
-        self.parent = top_level_frame
-        self.task_id = Task._task_id_counter
-        Task._task_id_counter += 1
+        self.task_name = name
+        self.first_week_id = first_week_id
+        self.archived = archived
 
-        self.text = Tkinter.StringVar()
-        self.label = Tkinter.Label(self,
-                                   textvariable=self.text)
-        self.update_to_value(0)
-
-        self.subtasks = []
-
-        self.add_subtask_button = Tkinter.Button(self,
-                                                 text="+",
-                                                 command=self.add_subtask)
-
-        self.label.grid(row=0, sticky=Tkinter.W)
-        self.grid(row=self.task_id, sticky=Tkinter.W)
-        self.add_subtask_button.grid(row=0, column=1, sticky=Tkinter.E)
-
-        self.week_slots = {}
-
-    def add_subtask(self, name=None):
-        """
-        Adds a subtask. Prompts for name is one is not supplied.
-        :param str name: Name of sub task.
-        :return:
-        """
-        if name is None:
-            window = Tkinter.Toplevel(self.parent)
-            window.wm_title("Enter sub task name")
-            entry = Tkinter.Entry(window, width=20)
-            entry.pack()
-
-            def accept():
-                self.add_subtask(entry.get())
-                window.destroy()
-
-            Tkinter.Button(window, text="Accept", command=accept).pack()
+        if subtasks is None:
+            self.subtasks = []
         else:
-            logging.info("New subtask added: " + name)
-            new_subtask = SubTask(self, name)
-            self.subtasks.append(new_subtask)
-            self.week_slots[self.parent.week_index_counter].add_subtask_time()
+            for subtask in subtasks:
+                self.add_subtask(subtask)
 
-    def add_week(self):
-        """
-        Adds a week to this task. This creates a timeslot in the added week for
-        both the general task and each sub task.
-        :return:
-        """
-        logging.debug("Adding week to %s" % self)
-        column = self.parent.week_index_counter
-        self.week_slots[column] = timeslot.TaskTime(self.parent,
-                                                    self.task_id,
-                                                    column)
-        for _ in self.subtasks:
-            self.week_slots[column].add_subtask_time()
-
-    def get_value_in_week(self, column):
-        """
-        Sums the total time tracked in a given week for this task and all
-        sub tasks.
-        :param int column: Index of week.
-        :return float: Sum of time spent in a given week on this task.
-        """
-        if column in self.week_slots:
-            return self.week_slots[column].get_task_time_total()
+        self.weeks = []
+        if weeks is None:
+            # Add one week. Expect that if no details are passed in,
+            # then this will be the highest week index.
+            # I.e. the most recent week.
+            self.add_week(self.first_week_id)
         else:
-            return 0
+            for i, _week in enumerate(weeks):
+                week_index = self.first_week_id + i
+                self.add_week(week_index, _week)
 
-    def update_times(self):
-        """
-        Triggers updating of the labels with the time spent in each task and
-        sub task.
-        :return:
-        """
-        counter = defaultdict(int)
-        total_count = 0
-        for week in self.week_slots.itervalues():
-            for row, sub_task_time in week.subtask_times.iteritems():
-                counter[row] += sub_task_time.get_task_time()
-                total_count += sub_task_time.get_task_time()
+    def add_subtask(self, subtask_name):
+        self.subtasks.append(subtask_name)
 
-        for row, value in counter.iteritems():
-            if row == 0:
-                self.update_to_value(value)
-            else:
-                self.subtasks[row-1].update_to_value(value)
+        # Add subtask slot to latest week, but not historically.
+        if self.weeks:
+            self.weeks[-1].add_subtask()
 
-        self.update_to_value(total_count)
+    def add_week(self, week_index, details=None):
+        if self.archived:  # Archived tasks do not get weeks added to them.
+            return
 
-    def update_to_value(self, value):
-        """
-        Update the label of this task.
-        :param float value: Time spent on this task in total (across all weeks)
-        :return:
-        """
-        self.text.set(self.name + ": " + str(value))
+        if details is None:
+            # Add 0 at start for overall task.
+            details = [0] + [0 for _ in self.subtasks]
+        self.weeks.append(week.Week(week_index, details))
+
+    def get_total_time(self):
+        count = 0
+        for _week in self.weeks:
+            count += _week.get_total_time()
+        return count
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
-        return self.name
-
-
-class SubTask(Tkinter.Label):
-    """
-    A sub task under a task. Can track time against sub tasks independently.
-    """
-    def __init__(self, parent_task, name):
-        self.text = Tkinter.StringVar()
-        self.parent = parent_task
-        self.name = name
-
-        Tkinter.Label.__init__(self,
-                               parent_task,
-                               textvariable=self.text)
-
-        self.update_to_value(0)
-
-        self.grid(sticky=Tkinter.W)
-
-    def update_to_value(self, value):
-        self.text.set(self.name + ": " + str(value))
+        return self.task_name

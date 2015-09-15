@@ -1,28 +1,19 @@
 import Tkinter
-import task
-import timeslot
+import task_old
+import timeslot_old
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class Tracker(Tkinter.Frame):
-    """
-    Main class. Handles adding tasks and weeks.
-    Updates sums when user presses <Return>.
-    """
     def __init__(self, tkinter_root):
-        """
-
-        :param Tkinter.Tk tkinter_root: Tkinter root window.
-        :return:
-        """
         Tkinter.Frame.__init__(self, tkinter_root)
         self.grid(row=1, column=0)
 
         self.tasks = {}
         self.weeks = {}
-        self.week_index_counter = 1
+        self.week_index_counter = 2
 
         self.add_task_button = Tkinter.Button(self,
                                               text="+Task",
@@ -37,53 +28,35 @@ class Tracker(Tkinter.Frame):
         tkinter_root.bind('<Return>', self.update_time_totals)
 
     def add_task(self, name=None):
-        """
-        Adds a new task with name.
-        :param str name: Name of task.
-        :return:
-        """
         if name is None:
-            # If no name supplied, bring up prompt then call back into this
-            # function with name gathered from prompt.
             window = Tkinter.Toplevel(self)
             window.wm_title("Enter task name")
             entry = Tkinter.Entry(window, width=20)
             entry.pack()
 
             def accept():
-                # Callback function for when button is pressed.
-                self.add_task(entry.get())
+                new_task = task_old.Task(self, entry.get())
+                self.tasks[new_task.task_id] = new_task
                 window.destroy()
 
             Tkinter.Button(window, text="Accept", command=accept).pack()
 
         else:
-            new_task = task.Task(self, name)
+            new_task = task_old.Task(self, name)
             self.tasks[new_task.task_id] = new_task
-            new_task.add_week(self.week_index_counter)  # Add latest week slot
 
     def add_week(self):
-        """
-        Adds a new week. Always adds one week in the future.
-        :return:
-        """
         logging.debug("Adding week globally.")
-        self.week_index_counter += 1
         date = "test date"
         self.weeks[self.week_index_counter] = \
-            timeslot.WeekLabel(self, self.week_index_counter, date)
+            timeslot_old.WeekLabel(self, self.week_index_counter, date)
 
         for _task in self.tasks.itervalues():
             _task.add_week(self.week_index_counter)
 
+        self.week_index_counter += 1
+
     def update_time_totals(self, _):
-        """
-        Tells all tasks and weeks to update their totals of time in rows and
-        columns respectively.
-        Triggered when user presses <Return>.
-        :param _: Event from Tkinter that we don't care about.
-        :return:
-        """
         logging.debug("Updating time totals.")
         for task in self.tasks.itervalues():
             task.update_times()
@@ -100,6 +73,8 @@ if __name__ == "__main__":
     root.wm_title("Time Tracker")
     root.resizable()
     tracker = Tracker(root)
+
+    to_draw = []
 
     tracker.add_task("Task 1")
     tracker.tasks[1].add_subtask("Sub task 1")
