@@ -1,4 +1,5 @@
-import week
+import weekslot
+import logging
 
 
 class Task(object):
@@ -37,7 +38,7 @@ class Task(object):
     def add_subtask(self, subtask_name):
         self.subtasks.append(subtask_name)
 
-        # Add subtask slot to latest week, but not historically.
+        # Add subtask slot to latest week only.
         if self.weeks:
             self.weeks[-1].add_subtask()
 
@@ -48,13 +49,37 @@ class Task(object):
         if details is None:
             # Add 0 at start for overall task.
             details = [0] + [0 for _ in self.subtasks]
-        self.weeks.append(week.Week(week_index, details))
+        self.weeks.append(weekslot.WeekSlot(week_index, details))
 
     def get_total_time(self):
         count = 0
         for _week in self.weeks:
             count += _week.get_total_time()
         return count
+
+    def get_total_subtask_times(self):
+        counter = [self.get_time_for_subtask(subtask_name) for
+                   subtask_name in self.subtasks]
+
+        return counter
+
+    def get_time_for_subtask(self, subtask_name):
+        logging.debug("Getting time for subtask %s" % subtask_name)
+        counter = 0
+
+        # Subtask index is actually 1 higher for a week object because the first slot is for the main task entry.
+        subtask_index = self.subtasks.index(subtask_name) + 1
+        for _week in self.weeks:
+            counter += _week.get_time_in_entry(subtask_index)
+
+        return counter
+
+    def get_time_for_week(self, week_index):
+        logging.debug("Getting time for week %d" % week_index)
+        if week_index >= self.first_week_id:
+            return self.weeks[week_index - self.first_week_id].get_total_time()
+        else:
+            return 0
 
     def __repr__(self):
         return str(self)

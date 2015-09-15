@@ -53,7 +53,6 @@ class Tracker(object):
             return
 
         _task = task.Task(task_name, self.week_index - 1)
-        self.task_order.append(task_name)
         self._new_task(_task)
 
     def _new_task(self, _task):
@@ -62,6 +61,7 @@ class Tracker(object):
             logging.warning("Task with name %s already exists, aborting creation." % name)
             return
 
+        self.task_order.append(name)
         self.tasks[name] = _task
         self.add_task_display(_task)
 
@@ -87,6 +87,18 @@ class Tracker(object):
                 self.tracker_display.add_week_slot(_task, _task.weeks[-1])
 
         self.week_index += 1
+
+    def update_all(self, _=None):
+        self.tracker_display.update_all_task_labels()
+        self.update_week_labels()
+
+    def update_week_labels(self):
+        for week_index, week_label in enumerate(self.tracker_display.week_labels):
+            counter = 0
+            for _task in self.tasks.itervalues():
+                counter += _task.get_time_for_week(week_index + self.first_week_index)
+
+            week_label.update_to_value(counter)
 
 
 if False:#os.listdir(save_folder):

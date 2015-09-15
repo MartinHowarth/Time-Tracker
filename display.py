@@ -46,6 +46,8 @@ class TrackerDisplay(Tkinter.Frame):
         self.task_displays = {}
         self.week_labels = []
 
+        self.parent.bind('<Return>', self.tracker.update_all)
+
         self.draw()
 
     def add_task(self, name):
@@ -60,8 +62,6 @@ class TrackerDisplay(Tkinter.Frame):
 
     def add_task_display(self, _task, task_index):
         self.task_displays[_task] = TaskDisplay(self, _task, task_index)
-        for week in _task.weeks:
-            self.add_week_slot(_task, week)
 
     def add_week_label(self, week_name, week_index):
         self.week_labels.append(WeekLabel(self, week_name, week_index))
@@ -73,6 +73,10 @@ class TrackerDisplay(Tkinter.Frame):
         self.grid(row=1, column=0)
         self.add_task_button.grid(row=0, column=0, sticky=Tkinter.W)
         self.add_week_button.grid(row=0, column=1, sticky=Tkinter.W)
+
+    def update_all_task_labels(self):
+        for task_display in self.task_displays.itervalues():
+            task_display.update_all()
 
 
 class TaskDisplay(Tkinter.Frame):
@@ -99,7 +103,7 @@ class TaskDisplay(Tkinter.Frame):
         self.label = Tkinter.Label(self,
                                    textvariable=self._label_text)
 
-        self.update_to_value(self.task.get_total_time())
+        self.update_counter()
 
         # Create a button that prompts for a name, then creates a new subtask.
         self.add_new_subtask_button = Tkinter.Button(self,
@@ -113,9 +117,11 @@ class TaskDisplay(Tkinter.Frame):
         for subtask in self.task.subtasks:
             self.add_subtask_label(subtask)
 
-        self.week_slots = []
+        self.week_displays = []
         for _week in self.task.weeks:
+            logging.debug(self.task.weeks)
             self.add_week(_week)
+        logging.debug(self.week_displays)
 
         self.draw()
 
@@ -127,8 +133,13 @@ class TaskDisplay(Tkinter.Frame):
         :param str name: Subtask name.
         :return:
         """
+        if name in self.task.subtasks:
+            logging.info("A subtask with name %s already exists. Creation aborted." % name)
+            return
+
         self.task.add_subtask(name)
         self.add_subtask_label(name)
+        self.week_displays[-1].add_subtask()  # Add entry in latest week for new subtask.
 
     def add_subtask_label(self, name):
         """
@@ -139,14 +150,26 @@ class TaskDisplay(Tkinter.Frame):
         self.subtask_labels.append(SubTaskLabel(self, name))
 
     def add_week(self, _week):
-        self.week_slots.append(WeekDisplay(self.parent, _week, self.row_id, _week.index))
+        self.week_displays.append(WeekDisplay(self.parent, _week, self.row_id, _week.index))
 
     def draw(self):
         self.grid(row=self.row_id, sticky=Tkinter.W)  # Draw task details onto main grid in correct row.
         self.label.grid(row=0, sticky=Tkinter.W)  # Draw task label in sub-grid that belongs to this task.
         self.add_new_subtask_button.grid(row=0, column=1, sticky=Tkinter.E)  # Draw new subtask button next to label.
 
-    def update_to_value(self, value):
+    def update_all(self):
+        logging.debug("Updating all week slots, task labels and subtask labels.")
+        for week_display in self.week_displays:
+            week_display.update_values()
+
+        self.update_counter()
+        for subtask_label in self.subtask_labels:
+            subtask_label.update_counter()
+
+    def update_counter(self):
+        self._update_to_value(self.task.get_total_time())
+
+    def _update_to_value(self, value):
         """
         Update the label to keep the same name, but with a new value.
         :param float value: Value to display.
@@ -156,22 +179,26 @@ class TaskDisplay(Tkinter.Frame):
 
 
 class SubTaskLabel(Tkinter.Label):
-    def __init__(self, parent_task, name):
-        self.parent = parent_task
+    def __init__(self, parent_task_display, name):
+        self.parent = parent_task_display
         self.name = name
 
         # Create the label with a variable text field so we can change it later.
         self.text = Tkinter.StringVar()
         Tkinter.Label.__init__(self,
-                               parent_task,
+                               parent_task_display,
                                textvariable=self.text)
 
         # Initialise label with default value.
-        self.update_to_value(0)
+        self.update_counter()
 
         self.grid(sticky=Tkinter.W)
 
-    def update_to_value(self, value):
+    def update_counter(self):
+        logging.debug("Updating counter for subtask %s" % self.name)
+        self._update_to_value(self.parent.task.get_time_for_subtask(self.name))
+
+    def _update_to_value(self, value):
         """
         Update the label to keep the same name, but with a new value.
         :param float value: Value to display.
@@ -186,7 +213,7 @@ class WeekDisplay(Tkinter.Frame):
         Displays a single task/week grid space.
         Has an entry per subtask (and one for the general task).
         :param TrackerDisplay parent: Tkinter Frame within which this frame resides.
-        :param week.Week _week: Datastore that this class will draw.
+        :param weekslot.WeekSlot _week: Datastore that this class will draw.
         :return:
         """
         logging.debug("Creating display for week %s" % str(_week))
@@ -214,15 +241,26 @@ class WeekDisplay(Tkinter.Frame):
         :return:
         """
         new_entry = Tkinter.Entry(self, width=5)
-        new_entry.insert(0, str(init_time))
+        new_entry.insert(0, str(init_time))  # insert the supplied value at position 0.
         self.entries.append(new_entry)
         self.draw()
 
     def draw(self):
-        self.grid(row=self.row_index, column=self.column_index, sticky=Tkinter.W)
+        self.grid(row=self.row_index, column=self.column_index, sticky=Tkinter.N)
 
         for index, entry in enumerate(self.entries):
             entry.grid(row=index)
+
+    def update_values(self):
+        """
+        Put the values in the field entries into the week object.
+        :return:
+        """
+        logging.debug("Updating values for week slot in row %d, column %d" % (self.row_index, self.column_index))
+        values = []
+        for entry in self.entries:
+            values.append(float(entry.get()))
+        self.week.update_values(values)
 
 
 class WeekLabel(Tkinter.Label):
@@ -254,6 +292,7 @@ class WeekLabel(Tkinter.Label):
         :param float value: Value to display.
         :return:
         """
+        logging.debug("Updating week label %s to value %d" % (self.date_string, value))
         self.text.set("%s\n%d" % (self.date_string, value))
 
     def draw(self):
