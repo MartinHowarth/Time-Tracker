@@ -1,11 +1,25 @@
-- Add output to .csv or excel
+- Add output to .csv or excel? might not be needed.
+
 - Add prompt that auto-appears on schedule
 
 - scrollbar
-- lock task panel in scroll
+- lock task panel in scroll (so you can always see it)
+- maybe make the week slots a separate grid for this? keeping alignment might be hard then?
 
 - Able to archive tasks (removes from display, but stores the info)
 
 - Save and reload
+    - Saves 10 copies, so you can always go back if you make mistake
 
 - Add comments and logging
+
+- Add manager interface over IP requests
+
+- Consider changing drawing to be a complete refresh every time something changes. better in the long run and more
+robust
+
+- Change order of tasks
+
+- Generally beautify
+    - Fix spacing between entries so they align with task labels
+    - Add borders to visually separate tasks / weeks

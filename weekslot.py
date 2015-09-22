@@ -8,7 +8,9 @@ class WeekSlot(object):
         self.index = week_index
 
     def add_subtask(self):
+        logging.debug("Adding new blank subtask to a week with index %d" % self.index)
         self.time_tracked.append(0)
+        print self.time_tracked
 
     def get_total_time(self):
         """
@@ -23,7 +25,6 @@ class WeekSlot(object):
 
     def get_time_in_entry(self, index):
         logging.debug("Getting time for week index %d in subtask slot %d" % (self.index, index))
-        print len(self.time_tracked)
         if index > len(self.time_tracked) - 1:
             # Return 0 for weeks that existed before this subtask was added.
             return 0
@@ -35,4 +36,6 @@ class WeekSlot(object):
             logging.error("New values provided for week index %d are not of correct length. Expected length %d, "
                           "got length %d" %
                           (self.index, len(self.time_tracked), len(values)))
-        self.time_tracked = values
+
+        for i, value in enumerate(values):
+            self.time_tracked[i] = value

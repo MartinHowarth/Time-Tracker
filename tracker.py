@@ -13,7 +13,6 @@ save_folder = "C:/blah/blah"
 
 class Tracker(object):
     first_task_index = 1
-    first_week_index = 2
 
     def __init__(self, tkinter_root, _datastore):
         self.parent = tkinter_root
@@ -26,9 +25,7 @@ class Tracker(object):
         self.task_order = [_task for _task in self.unfiltered_task_order if _task not in self.archived_tasks]
         self.first_date = self.datastore.get_first_date()
 
-        self.tracker_display = display.TrackerDisplay(self.parent, self)
-
-        self.week_index = self.first_week_index  # Offset column for first week to allow for task labels etc.
+        self.week_index = 0
         for week_id in range(self.datastore.get_highest_week_id()):
             self.add_week(init_setup=True)
 
@@ -36,8 +33,10 @@ class Tracker(object):
         for task_name in self.task_order:
             self.create_task_from_store(task_name)
 
+        self.tracker_display = display.TrackerDisplay(self.parent, self)
+
     def get_week_name(self, week_id):
-        new_date = self.first_date + datetime.timedelta(days=7*(week_id - self.first_week_index))
+        new_date = self.first_date + datetime.timedelta(days=7*week_id)
         new_date = new_date.strftime("%d %b")  # Prints in format like "14 Sep"
         return str(new_date)
 
@@ -48,12 +47,15 @@ class Tracker(object):
     def create_new_task(self, task_name):
         # Create task with week slot for latest existing week.
         # That week has index self.week_index - 1
-        if self.week_index <= self.first_week_index:
+        if self.week_index == 0:
             logging.warning("Add at least one week before creating tasks. Aborting task creation.")
             return
 
         _task = task.Task(task_name, self.week_index - 1)
         self._new_task(_task)
+
+    def get_task_and_index(self, task_name):
+        return self.tasks[task_name], self.task_order.index(task_name)
 
     def _new_task(self, _task):
         name = _task.task_name
@@ -63,12 +65,6 @@ class Tracker(object):
 
         self.task_order.append(name)
         self.tasks[name] = _task
-        self.add_task_display(_task)
-
-    def add_task_display(self, _task):
-        self.tracker_display.add_task_display(_task,
-                                              self.task_index)
-        self.task_index += 1
 
     def add_week(self, init_setup=False):
         """
@@ -78,27 +74,20 @@ class Tracker(object):
             If it's a new week, then we add a new week slot to each task.
         :return:
         """
-        self.tracker_display.add_week_label(self.get_week_name(self.week_index),
-                                            self.week_index)
-
         if not init_setup:
             for _task in self.tasks.itervalues():
                 _task.add_week(self.week_index)
-                self.tracker_display.add_week_slot(_task, _task.weeks[-1])
 
         self.week_index += 1
 
-    def update_all(self, _=None):
-        self.tracker_display.update_all_task_labels()
-        self.update_week_labels()
+    def update(self):
+        """
+        Complete redraw the display. Does not recreate the Tkinter root.
+        :return:
+        """
+        self.tracker_display.destroy()
+        self.tracker_display = display.TrackerDisplay(self.parent, self)
 
-    def update_week_labels(self):
-        for week_index, week_label in enumerate(self.tracker_display.week_labels):
-            counter = 0
-            for _task in self.tasks.itervalues():
-                counter += _task.get_time_for_week(week_index + self.first_week_index)
-
-            week_label.update_to_value(counter)
 
 
 if False:#os.listdir(save_folder):
