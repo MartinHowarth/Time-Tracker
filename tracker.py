@@ -12,24 +12,20 @@ save_folder = "C:/blah/blah"
 
 
 class Tracker(object):
-    first_task_index = 1
-
     def __init__(self, tkinter_root, _datastore):
         self.parent = tkinter_root
         self.datastore = _datastore
 
         self.tasks = {}
-        self.unfiltered_task_order = self.datastore.task_order
-        self.archived_tasks = self.datastore.get_archived_list()
-        # remove archived tasks from the order so they don't get shown
-        self.task_order = [_task for _task in self.unfiltered_task_order if _task not in self.archived_tasks]
+        self.task_order = self.datastore.task_order
         self.first_date = self.datastore.get_first_date()
+        self.archived_week_index = self.datastore.archived_week_index
 
         self.week_index = 0
         for week_id in range(self.datastore.get_highest_week_id()):
             self.add_week(init_setup=True)
 
-        self.task_index = self.first_task_index  # Offset row for first task to allow for headers, etc.
+        self.task_index = 0
         for task_name in self.task_order:
             self.create_task_from_store(task_name)
 

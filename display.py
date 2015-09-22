@@ -111,9 +111,13 @@ class TaskDisplay(Tkinter.Frame):
         :param task.Task _task: Datastore that this class will draw.
         :return:
         """
-        logging.debug("Creating display for task %s" % str(_task))
+        logging.debug("Creating display for task %s" % _task)
 
         self.task = _task
+
+        if self.task.archived:
+            logging.debug("Aborting display for task %s as it is archived." % _task)
+            return
 
         self.parent = parent
         self.row_id = row_id
@@ -231,7 +235,7 @@ class WeekDisplay(Tkinter.Frame):
         """
         Displays a single task/week grid space.
         Has an entry per subtask (and one for the general task).
-        :param Tkinter.Frame parent: Tkinter Frame within which this frame resides.
+        :param TrackerDisplay parent: Tkinter Frame within which this frame resides.
         :param weekslot.WeekSlot _week: Datastore that this class will draw.
         :return:
         """
@@ -251,7 +255,11 @@ class WeekDisplay(Tkinter.Frame):
         for time in self.week.time_tracked:
             self.add_subtask(time)
 
-        self.draw()
+        # Only display if this week is not archived.
+        if self.column_index >= self.parent.tracker.archived_week_index:
+            self.draw()
+        else:
+            logging.debug("Not displaying week slot in column %d because it is archived." % self.column_index)
 
     def add_subtask(self, init_time):
         """
@@ -287,7 +295,7 @@ class WeekLabel(Tkinter.Label):
     def __init__(self, parent, date_string, column_index):
         """
 
-        :param Tkinter.Frame parent: Tkinter Frame within which this frame resides.
+        :param TrackerDisplay parent: Tkinter Frame within which this frame resides.
         :param str date_string: Date in string format
         :param int column_index: Grid index to draw this label.
         :return:
@@ -301,7 +309,11 @@ class WeekLabel(Tkinter.Label):
         self.date_string = date_string
         self.column_index = column_index
 
-        self.draw()
+        # Only display if this week is not archived.
+        if self.column_index >= parent.tracker.archived_week_index:
+            self.draw()
+        else:
+            logging.debug("Not displaying week label in column %d because it is archived." % self.column_index)
 
     def update_to_value(self, value):
         """
@@ -314,4 +326,3 @@ class WeekLabel(Tkinter.Label):
 
     def draw(self):
         self.grid(row=0, column=self.column_index + COLUMN_OFFSET)
-

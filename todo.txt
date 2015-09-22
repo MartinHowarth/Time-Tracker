@@ -1,25 +1,37 @@
-- Add output to .csv or excel? might not be needed.
+Tasks:
+    - Able to archive tasks (removes from display, but stores the info)
+        - Add button
+        - Add pop up to display list of archived tasks so you can unarchive them
+    - Able to delete task?
 
-- Add prompt that auto-appears on schedule
+General
+    - Save and reload
+        - Save 10 copies, so you can always go back if you make mistake
+        - Tasks
+            - Subtasks
+        - First week date
+        - Archived tasks
+        - Archived week index
+        - Per week task data
 
-- scrollbar
-- lock task panel in scroll (so you can always see it)
-- maybe make the week slots a separate grid for this? keeping alignment might be hard then?
+    - Add comments and logging
 
-- Able to archive tasks (removes from display, but stores the info)
+    - Add manager interface over IP requests
+    - Add prompt that auto-appears on schedule
 
-- Save and reload
-    - Saves 10 copies, so you can always go back if you make mistake
+Weeks:
+    - Able to archive weeks
+        - Add buttons to increase/decrease week archive index
+    - Change order of tasks
 
-- Add comments and logging
+UI:
+    - Generally beautify
+        - Fix spacing between entries so they align with task labels
+        - Add borders to visually separate tasks / weeks
+    - scrollbar
+        - lock task details when scrolling (so you can always see it)
 
-- Add manager interface over IP requests
 
-- Consider changing drawing to be a complete refresh every time something changes. better in the long run and more
-robust
 
-- Change order of tasks
-
-- Generally beautify
-    - Fix spacing between entries so they align with task labels
-    - Add borders to visually separate tasks / weeks
+WIBNI:
+    - Improve performance of reloading entire UI. I think this is negligible as people can archive tasks and weeks.
