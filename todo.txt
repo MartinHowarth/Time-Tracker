@@ -14,22 +14,58 @@ General
         - Archived week index
         - Per week task data
 
-    - Add comments and logging
+    - Save all changes in git??????
+        - file per task
+        - initials subtasks time_spent date
+        - local vs private tasks?
+
+    - Notification of new task added
+
+    - Assign tasks to someone(s)
+
+    - Add code comments and logging
 
     - Add manager interface over IP requests
+        - push and pull tasks (so that names are consistent)
+
+
     - Add prompt that auto-appears on schedule
+        - Brings up a form with drop downs for choosing tasks/subtasks and enter time without having to look at the
+            actual large panel
+
+    - Export as .csv or excel or something that can be imported
+
+    - Track against budgets
+        - Per task
+        - Per subtask
+        - slip and gain against that
+        - Estimate and revised estimate. E.g. time left when partially through a task
+
+    - 0.0 to be blank
+
+    - Be able to add comments to individual tracking slots
+
+    - Real time tracking
+        - with pause
 
 Weeks:
     - Able to archive weeks
         - Add buttons to increase/decrease week archive index
     - Change order of tasks
+    - Daily breakdown for latest week
+    - Able to re-show daily breakdown for older weeks
 
 UI:
     - Generally beautify
         - Fix spacing between entries so they align with task labels
         - Add borders to visually separate tasks / weeks
-    - scrollbar
+    - scrollbar???
         - lock task details when scrolling (so you can always see it)
+    - Graphs to visualise data
+
+    - Calendar view with bars/pies to show time against things
+
+    -
 
 
 

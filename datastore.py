@@ -42,6 +42,7 @@ class DataStore(object):
             self.raw_data['tasks'] = []
             self.raw_data['first_date'] = str(datetime.datetime.strptime(str(datetime.date.today()),
                                                                          "%Y-%m-%d"))
+            self.raw_data['archived_week_index'] = 0
 
     @property
     def raw_tasks(self):

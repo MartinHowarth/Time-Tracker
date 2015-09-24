@@ -6,7 +6,7 @@ import datetime
 import logging
 import os
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 save_folder = "C:/blah/blah"
 
