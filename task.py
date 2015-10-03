@@ -17,6 +17,7 @@ class Task(object):
         self.task_name = name
         self.first_week_id = first_week_id
         self.archived = archived
+        self.just_unarchived = False
 
         if subtasks is None:
             self.subtasks = []
@@ -34,6 +35,28 @@ class Task(object):
             for i, _week in enumerate(weeks):
                 week_index = self.first_week_id + i
                 self.add_week(week_index, _week)
+
+    def check_subtask_name_validity(self, name):
+        """
+        Checks whether a sub task name already exists in this task.
+        :param str name: Name to check
+        :return bool: True if the supplied name doesn't already exist. False if it does.
+        """
+        if name in self.subtasks:
+            logging.warning("A subtask with name %s already exists." % name)
+            return False
+        return True
+
+    def rename_subtask(self, old_name, new_name):
+        """
+        Rename a subtask. Preserves subtask ordering.
+        :param str old_name: Old name of the subtask
+        :param str new_name: New name of the subtask
+        :return:
+        """
+        if self.check_subtask_name_validity(new_name):
+            subtask_index = self.subtasks.index(old_name)
+            self.subtasks[subtask_index] = new_name
 
     def add_subtask(self, subtask_name):
         """
@@ -111,9 +134,12 @@ class Task(object):
         """
         logging.debug("Getting time for week %d" % week_index)
         if week_index >= self.first_week_id:
-            return self.weeks[week_index - self.first_week_id].get_total_time()
-        else:
-            return 0
+            offset_index = week_index - self.first_week_id
+            if offset_index > len(self.weeks) - 1:
+                logging.debug("Week has been archived since before week index %d was added." % week_index)
+            else:
+                return self.weeks[offset_index].get_total_time()
+        return 0
 
     def __repr__(self):
         return str(self)

@@ -28,7 +28,6 @@ class DataStore(object):
     """
     def __init__(self, filename=None):
         """
-
         :param str filename: Filename with file path for where to load/save.
         :return:
         """

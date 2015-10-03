@@ -23,7 +23,6 @@ class WeekSlot(object):
         """
         logging.debug("Adding new blank subtask to a week with index %d" % self.index)
         self.time_tracked.append(0)
-        print self.time_tracked
 
     def get_total_time(self):
         """
@@ -56,13 +55,12 @@ class WeekSlot(object):
         """
         Overwrite the stored values with provided values. The provided values overwrite the stored ones in a linear
         manner starting from the 0 index.
-        E.g. If len(values) is les than the number of stored values, the last stored values will remain unchanged.
+        E.g. If len(values) is less than the number of stored values, the last stored values will remain unchanged.
         :param list values: List of floats to overwrite stored values with
         :return:
         """
-        if len(values) != len(self.time_tracked):
-            logging.error("New values provided for week index %d are not of correct length. Expected length %d, "
-                          "got length %d" %
+        if len(values) > len(self.time_tracked):
+            logging.error("Too many values provided for week %d. Expected %d values, got %d" %
                           (self.index, len(self.time_tracked), len(values)))
 
         for i, value in enumerate(values):

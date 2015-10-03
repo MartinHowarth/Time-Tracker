@@ -1,7 +1,4 @@
 Tasks:
-    - Able to archive tasks (removes from display, but stores the info)
-        - Add button
-        - Add pop up to display list of archived tasks so you can unarchive them
     - Able to delete task?
 
 General
@@ -19,19 +16,20 @@ General
         - initials subtasks time_spent date
         - local vs private tasks?
 
-    - Notification of new task added
+    - Export as .csv or excel or something that can be imported
 
-    - Assign tasks to someone(s)
+    - Track against budgets
+        - Per task
+        - Per subtask
+        - slip and gain against that
+        - Estimate and revised estimate. E.g. time left when partially through a task
 
-    - Add code comments and logging
-
-    - Add manager interface over IP requests
-        - push and pull tasks (so that names are consistent)
-
+    - Add more code comments and logging
 
     - Add prompt that auto-appears on schedule
         - Brings up a form with drop downs for choosing tasks/subtasks and enter time without having to look at the
             actual large panel
+
 
     - Export as .csv or excel or something that can be imported
 
@@ -41,17 +39,22 @@ General
         - slip and gain against that
         - Estimate and revised estimate. E.g. time left when partially through a task
 
-    - 0.0 to be blank
-
     - Be able to add comments to individual tracking slots
 
     - Real time tracking
         - with pause
 
-Weeks:
-    - Able to archive weeks
-        - Add buttons to increase/decrease week archive index
     - Change order of tasks
+
+Collaboration:
+    - Notification of new task added
+    - Assign tasks to someone(s)
+
+
+    - Add manager interface over IP requests
+        - push and pull tasks (so that names are consistent)
+
+Weeks:
     - Daily breakdown for latest week
     - Able to re-show daily breakdown for older weeks
 
@@ -59,14 +62,9 @@ UI:
     - Generally beautify
         - Fix spacing between entries so they align with task labels
         - Add borders to visually separate tasks / weeks
-    - scrollbar???
-        - lock task details when scrolling (so you can always see it)
     - Graphs to visualise data
 
     - Calendar view with bars/pies to show time against things
-
-    -
-
 
 
 WIBNI:

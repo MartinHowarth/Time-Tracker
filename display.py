@@ -27,7 +27,6 @@ def prompt_for_value(parent, function_to_call, title):
 class TrackerDisplay(Tkinter.Frame):
     def __init__(self, parent, _tracker):
         """
-
         :param Tkinter.Tk parent: Tkinter root.
         :return:
         """
@@ -36,15 +35,30 @@ class TrackerDisplay(Tkinter.Frame):
         self.parent = parent
         Tkinter.Frame.__init__(self, self.parent)
 
-        self.add_task_button = Tkinter.Button(self,
+        # Create a frame that will house all of the buttons so that they fit nicely into one grid slot.
+        self.button_frame = Tkinter.Frame(self)
+
+        self.add_task_button = Tkinter.Button(self.button_frame,
                                               text="+Task",
                                               command=prompt_for_value(self,
                                                                        self.add_task,
                                                                        "Enter task name"))
 
-        self.add_week_button = Tkinter.Button(self,
+        self.add_week_button = Tkinter.Button(self.button_frame,
                                               text="+Week",
                                               command=self.add_week)
+
+        self.increment_week_archive_button = Tkinter.Button(self.button_frame,
+                                                            text=">",
+                                                            command=self.increment_week_archive)
+        self.decrement_week_archive_button = Tkinter.Button(self.button_frame,
+                                                            text="<",
+                                                            command=self.decrement_week_archive)
+
+        self.archive_button = Tkinter.Button(self.button_frame,
+                                             text="Archive",
+                                             command=self.show_archive)
+        self.archive_display = None
 
         self.parent.bind('<Return>', self.update)
 
@@ -89,12 +103,57 @@ class TrackerDisplay(Tkinter.Frame):
         logging.debug("Adding week slot to task %s for week %s" % (_task, week))
         self.task_displays[_task].add_week(week)
 
+    def increment_week_archive(self):
+        """
+        Shows one less week.
+        :return:
+        """
+        self.tracker.archived_week_index += 1
+        self.update()
+
+    def decrement_week_archive(self):
+        """
+        Shows one more week.
+        :return:
+        """
+        self.tracker.archived_week_index -= 1
+        self.update()
+
+    def show_archive(self):
+        """
+        Displays a new window with a list of archived tasks. Allows user to un-archive tasks.
+        """
+        self.archive_display = ArchiveDisplay(self)
+
+    def hide_archive(self):
+        """
+        Hides the archive window. Opposite of self.show_archive
+        """
+        self.archive_display.destroy()
+
     def draw(self):
-        self.grid(row=1, column=0)
-        self.add_task_button.grid(row=0, column=0, sticky=Tkinter.W)
-        self.add_week_button.grid(row=0, column=1, sticky=Tkinter.W)
+        """
+        Draws this TrackerDisplay onto the Tkinter root.
+        Also draws all of the management buttons in the 0,0 grid slot of this object.
+        :return:
+        """
+        self.grid(row=0, column=0)
+
+        self.archive_button.pack(side=Tkinter.LEFT)
+        self.add_task_button.pack(side=Tkinter.LEFT, padx=10)
+        self.add_week_button.pack(side=Tkinter.RIGHT, padx=10)
+        self.increment_week_archive_button.pack(side=Tkinter.RIGHT)
+        self.decrement_week_archive_button.pack(side=Tkinter.RIGHT)
+
+        self.button_frame.grid(row=0, column=0, sticky=Tkinter.W)
 
     def update(self, _=None):
+        """
+        Trigger re-draw of the entire UI.
+        Also gathers the input in all of the entries and stores it.
+        :param _: Dummy parameter. Tkinter passes in the event object that we don't care about.
+        :return:
+        """
         # Gather the data entered in each entry and store it.
         for task_display in self.task_displays.itervalues():
             task_display.gather_input()
@@ -126,11 +185,13 @@ class TaskDisplay(Tkinter.Frame):
                                borderwidth=2,
                                relief=Tkinter.GROOVE)
 
-        # Create a label with a variable text field so that we can update it later.
+        # Create a button with a variable text field so that we can update it later.
+        # Click it to change the task name
         self._label_text = Tkinter.StringVar()
-        self.label = Tkinter.Label(self,
-                                   textvariable=self._label_text)
-
+        self.label = Tkinter.Button(self,
+                                    textvariable=self._label_text,
+                                    command=prompt_for_value(self, self.set_name, "Enter new task name"))
+        # Update the value displayed in the text field
         self.update_counter()
 
         # Create a button that prompts for a name, then creates a new subtask.
@@ -140,7 +201,11 @@ class TaskDisplay(Tkinter.Frame):
                                                                               self.add_subtask,
                                                                               "Enter subtask name"))
 
-        # Draw this task now so that the sub task labels go underneath the main label.
+        self.archive_task_button = Tkinter.Button(self,
+                                                  text="-",
+                                                  command=self.archive_self)
+
+        # Draw this task now so that the sub task labels go underneath the main label when added later
         self.draw()
 
         # Create a label for each subtask.
@@ -153,6 +218,13 @@ class TaskDisplay(Tkinter.Frame):
         for _week in self.task.weeks:
             self.add_week(_week)
 
+    def set_name(self, name):
+        if self.parent.tracker.check_task_name_validity(name):
+            self.task.task_name = name
+            self.parent.update()
+        else:
+            logging.debug("Task name already exists, abandoning rename.")
+
     def add_subtask(self, name):
         """
         Intended to be called when the "new subtask" button is pressed.
@@ -161,12 +233,10 @@ class TaskDisplay(Tkinter.Frame):
         :param str name: Subtask name.
         :return:
         """
-        if name in self.task.subtasks:
-            logging.info("A subtask with name %s already exists. Creation aborted." % name)
-            return
+        if self.task.check_subtask_name_validity(name):
 
-        self.task.add_subtask(name)
-        self.parent.update()
+            self.task.add_subtask(name)
+            self.parent.update()
 
     def add_subtask_label(self, name):
         """
@@ -179,15 +249,28 @@ class TaskDisplay(Tkinter.Frame):
     def add_week(self, _week):
         self.week_displays.append(WeekDisplay(self.parent, _week, self.row_id, _week.index))
 
+    def archive_self(self):
+        self.task.archived = True
+        self.parent.update()
+
     def draw(self):
-        self.grid(row=self.row_id + ROW_OFFSET, sticky=Tkinter.W)  # Draw task details onto main grid in correct row.
-        self.label.grid(row=0, sticky=Tkinter.W)  # Draw task label in sub-grid that belongs to this task.
-        self.add_new_subtask_button.grid(row=0, column=1, sticky=Tkinter.E)  # Draw new subtask button next to label.
+        # Draw task details onto main grid in correct row based on defined task order.
+        self.grid(row=self.row_id + ROW_OFFSET, sticky=Tkinter.W)
+        # Draw task label in sub-grid that belongs to this task.
+        self.label.grid(row=0, sticky=Tkinter.W)
+        # Draw add subtask button next to label.
+        self.add_new_subtask_button.grid(row=0, column=1, padx=20, sticky=Tkinter.W)
+        # Draw archive button next to add subtask button
+        self.archive_task_button.grid(row=0, column=1, sticky=Tkinter.E)
 
     def gather_input(self):
-        logging.debug("Gathering input from entries.")
-        for week_display in self.week_displays:
-            week_display.update_values()
+        if not self.task.archived:
+            logging.debug("Gathering input from entries.")
+            for week_display in self.week_displays:
+                week_display.update_values()
+        if self.task.just_unarchived:
+            self.task.archived = False
+            self.task.just_unarchived = False
 
     def update_counter(self):
         self._update_to_value(self.task.get_total_time())
@@ -201,23 +284,42 @@ class TaskDisplay(Tkinter.Frame):
         self._label_text.set("%s: %d" % (self.task.task_name, value))
 
 
-class SubTaskLabel(Tkinter.Label):
+class SubTaskLabel(Tkinter.Button):
     def __init__(self, parent_task_display, name):
+        """
+        :param TaskDisplay parent_task_display: Task display object that owns this subtask
+        :param str name: subtask name
+        :return:
+        """
         self.parent = parent_task_display
         self.name = name
 
         # Create the label with a variable text field so we can change it later.
         self.text = Tkinter.StringVar()
-        Tkinter.Label.__init__(self,
-                               parent_task_display,
-                               textvariable=self.text)
+        Tkinter.Button.__init__(self,
+                                parent_task_display,
+                                textvariable=self.text,
+                                command=prompt_for_value(self, self.set_name, "Enter new subtask name"))
 
         # Initialise label with default value.
         self.update_counter()
 
         self.grid(sticky=Tkinter.W)
 
+    def set_name(self, name):
+        """
+        Change the name of this subtask.
+        :param str name: New name for this subtask.
+        :return:
+        """
+        self.parent.task.rename_subtask(self.name, name)
+        self.parent.parent.update()
+
     def update_counter(self):
+        """
+        Update the summation of time tracked against this task.
+        :return:
+        """
         logging.debug("Updating counter for subtask %s" % self.name)
         self._update_to_value(self.parent.task.get_time_for_subtask(self.name))
 
@@ -268,10 +370,17 @@ class WeekDisplay(Tkinter.Frame):
         :return:
         """
         new_entry = Tkinter.Entry(self, width=5)
-        new_entry.insert(0, str(init_time))  # insert the supplied value at position 0.
+        if init_time != 0:
+            # insert the supplied value into the entry. Leave blank if value is 0
+            new_entry.insert(0, str(init_time))
         self.entries.append(new_entry)
 
     def draw(self):
+        """
+        Draws this week display object in the correct grid slot of the TrackerDisplay object.
+        Also draws the entries for each subtask within this week object.
+        :return:
+        """
         self.grid(row=self.row_index + ROW_OFFSET,
                   column=self.column_index + COLUMN_OFFSET,
                   sticky=Tkinter.N)
@@ -287,7 +396,13 @@ class WeekDisplay(Tkinter.Frame):
         logging.debug("Updating values for week slot in row %d, column %d" % (self.row_index, self.column_index))
         values = []
         for entry in self.entries:
-            values.append(float(entry.get()))
+            # Try convert the string value stored in the entry to a float. If this fails, assume it is 0.
+            # Specifically this covers the case where the field is an empty string which signifies 0.
+            try:
+                float_value = float(entry.get())
+            except ValueError:
+                float_value = 0.0
+            values.append(float_value)
         self.week.update_values(values)
 
 
@@ -325,4 +440,50 @@ class WeekLabel(Tkinter.Label):
         self.text.set("%s\n%d" % (self.date_string, value))
 
     def draw(self):
+        """
+        Draws this week label in the first row of the correct column of the TrackerDisplay grid.
+        :return:
+        """
         self.grid(row=0, column=self.column_index + COLUMN_OFFSET)
+
+
+class ArchiveDisplay(Tkinter.Toplevel):
+    def __init__(self, parent):
+        """
+        :param TrackerDisplay parent:
+        """
+        Tkinter.Toplevel.__init__(self, parent)
+        self.wm_title("Click tasks to restore them")
+
+        self.parent = parent
+
+        self.hide_self_button = Tkinter.Button(self,
+                                               text="Close",
+                                               command=self.parent.hide_archive)
+
+        self.description_label = Tkinter.Label(self, text="Click tasks to restore them.")
+
+        self.archived_task_list = self.parent.tracker.get_archived_task_list()
+
+        self.restore_task_buttons = {}
+
+        for _task in self.archived_task_list:
+            self.restore_task_buttons[_task] = Tkinter.Button(self,
+                                                              text=str(_task),
+                                                              command=self.unarchive_task(_task))
+
+        self.draw()
+
+    def unarchive_task(self, _task):
+        def do_the_work():
+            # Set just unarchived so that we don't try and read the entry values from this task before we redraw.
+            _task.just_unarchived = True
+            self.restore_task_buttons[_task].destroy()
+            self.parent.update()
+        return do_the_work
+
+    def draw(self):
+        self.description_label.pack()
+        for button in self.restore_task_buttons.itervalues():
+            button.pack()
+        self.hide_self_button.pack()

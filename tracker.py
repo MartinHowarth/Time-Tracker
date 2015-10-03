@@ -13,13 +13,18 @@ save_folder = "C:/blah/blah"
 
 class Tracker(object):
     def __init__(self, tkinter_root, _datastore):
+        """
+        :param Tkinter.Tk tkinter_root: Root display object.
+        :param datastore.DataStore _datastore: Datastore object.
+        :return:
+        """
         self.parent = tkinter_root
         self.datastore = _datastore
 
         self.tasks = {}
         self.task_order = self.datastore.task_order
         self.first_date = self.datastore.get_first_date()
-        self.archived_week_index = self.datastore.archived_week_index
+        self._archived_week_index = self.datastore.archived_week_index
 
         self.week_index = 0
         for week_id in range(self.datastore.get_highest_week_id()):
@@ -30,6 +35,18 @@ class Tracker(object):
             self.create_task_from_store(task_name)
 
         self.tracker_display = display.TrackerDisplay(self.parent, self)
+
+    @property
+    def archived_week_index(self):
+        return self._archived_week_index
+
+    @archived_week_index.setter
+    def archived_week_index(self, value):
+        if value < 0:
+            return
+        if value > self.week_index:
+            return
+        self._archived_week_index = value
 
     def get_week_name(self, week_id):
         new_date = self.first_date + datetime.timedelta(days=7*week_id)
@@ -53,14 +70,32 @@ class Tracker(object):
     def get_task_and_index(self, task_name):
         return self.tasks[task_name], self.task_order.index(task_name)
 
+    def get_archived_task_list(self):
+        """
+        Gets a list of all tasks that are archived.
+        :return list[task.Task]: List of task objects that are archived.
+        """
+        archived_tasks = []
+        for _task in self.tasks.itervalues():
+            if _task.archived:
+                archived_tasks.append(_task)
+
+        return archived_tasks
+
+    def check_task_name_validity(self, name):
+        if name in self.tasks.keys():
+            logging.warning("Task with name %s already exists" % name)
+            return False
+        self.get_archived_task_list()
+        return True
+
     def _new_task(self, _task):
         name = _task.task_name
-        if name in self.tasks.keys():
-            logging.warning("Task with name %s already exists, aborting creation." % name)
-            return
-
-        self.task_order.append(name)
-        self.tasks[name] = _task
+        if self.check_task_name_validity(name):
+            self.task_order.append(name)
+            self.tasks[name] = _task
+        else:
+            logging.debug("Task name already exists, aborting creation.")
 
     def add_week(self, init_setup=False):
         """
