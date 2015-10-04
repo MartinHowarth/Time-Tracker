@@ -58,6 +58,15 @@ class TrackerDisplay(Tkinter.Frame):
         self.archive_button = Tkinter.Button(self.button_frame,
                                              text="Archive",
                                              command=self.show_archive)
+
+        self.save_button = Tkinter.Button(self.button_frame,
+                                          text="Save",
+                                          command=self._save)
+
+        self.load_button = Tkinter.Button(self.button_frame,
+                                          text="Load",
+                                          command=self._load)
+
         self.archive_display = None
 
         self.parent.bind('<Return>', self.update)
@@ -131,6 +140,19 @@ class TrackerDisplay(Tkinter.Frame):
         """
         self.archive_display.destroy()
 
+    def _save(self):
+        """
+        Called when the save button is pressed. Triggers Tracker object to save.
+        """
+        self.tracker.save()
+
+    def _load(self):
+        """
+        Called when the load button is pressed. Triggers Tracker object to load.
+        """
+        self.tracker.load()
+        self.tracker.update()
+
     def draw(self):
         """
         Draws this TrackerDisplay onto the Tkinter root.
@@ -139,6 +161,8 @@ class TrackerDisplay(Tkinter.Frame):
         """
         self.grid(row=0, column=0)
 
+        self.save_button.pack(side=Tkinter.LEFT)
+        self.load_button.pack(side=Tkinter.LEFT)
         self.archive_button.pack(side=Tkinter.LEFT)
         self.add_task_button.pack(side=Tkinter.LEFT, padx=10)
         self.add_week_button.pack(side=Tkinter.RIGHT, padx=10)
@@ -268,9 +292,9 @@ class TaskDisplay(Tkinter.Frame):
             logging.debug("Gathering input from entries.")
             for week_display in self.week_displays:
                 week_display.update_values()
-        if self.task.just_unarchived:
+        if self.task.archive_after_update:
             self.task.archived = False
-            self.task.just_unarchived = False
+            self.task.archive_after_update = False
 
     def update_counter(self):
         self._update_to_value(self.task.get_total_time())
@@ -475,9 +499,13 @@ class ArchiveDisplay(Tkinter.Toplevel):
         self.draw()
 
     def unarchive_task(self, _task):
+        """
+        Trigger this task to become unarchived on the next update of the display.
+        :param task.Task _task: Task to un-archive.
+        """
         def do_the_work():
             # Set just unarchived so that we don't try and read the entry values from this task before we redraw.
-            _task.just_unarchived = True
+            _task.archive_after_update = True
             self.restore_task_buttons[_task].destroy()
             self.parent.update()
         return do_the_work

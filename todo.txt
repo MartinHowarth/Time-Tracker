@@ -1,3 +1,6 @@
+Bugs:
+    - Save archived task. It has lost (some, all?) week slot data
+
 Tasks:
     - Able to delete task?
 
@@ -31,17 +34,9 @@ General
             actual large panel
 
 
-    - Export as .csv or excel or something that can be imported
-
-    - Track against budgets
-        - Per task
-        - Per subtask
-        - slip and gain against that
-        - Estimate and revised estimate. E.g. time left when partially through a task
-
     - Be able to add comments to individual tracking slots
 
-    - Real time tracking
+    - Real time tracking?
         - with pause
 
     - Change order of tasks

@@ -17,13 +17,14 @@ class Task(object):
         self.task_name = name
         self.first_week_id = first_week_id
         self.archived = archived
-        self.just_unarchived = False
+        self.archive_after_update = False
 
         if subtasks is None:
+            # If we are creating a new task, initialise an empty list of subtasks
             self.subtasks = []
         else:
-            for subtask in subtasks:
-                self.add_subtask(subtask)
+            # Otherwise, set the subtask list to be that passed in.
+            self.subtasks = subtasks
 
         self.weeks = []
         if weeks is None:
@@ -35,6 +36,7 @@ class Task(object):
             for i, _week in enumerate(weeks):
                 week_index = self.first_week_id + i
                 self.add_week(week_index, _week)
+
 
     def check_subtask_name_validity(self, name):
         """
