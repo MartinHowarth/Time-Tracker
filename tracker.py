@@ -1,14 +1,16 @@
 import Tkinter
-from datastore import DataStore
-import task
-import display
 import datetime
 import logging
-import os
+
+from datastore import DataStore
+import task
+from display import tracker_display
+
 
 # logging.basicConfig(level=logging.DEBUG)
 
-save_folder = "C:/blah/blah"
+save_folder = ""
+filename = "testing.trk"
 
 
 class Tracker(object):
@@ -34,7 +36,7 @@ class Tracker(object):
 
         self.load()
 
-        self.tracker_display = display.TrackerDisplay(self.parent, self)
+        self.tracker_display = tracker_display.TrackerDisplay(self.parent, self)
 
     @property
     def archived_week_index(self):
@@ -60,7 +62,9 @@ class Tracker(object):
         self.week_index = 0
 
     def _get_details_from_datastore(self):
-        # self.task_order = self.datastore.task_order
+        """
+        Populate this tracker with details from the datastore.
+        """
         self.first_date = self.datastore.first_date
         self._archived_week_index = self.datastore.archived_week_index
         for task_name in self.datastore.task_order:
@@ -68,11 +72,20 @@ class Tracker(object):
             self._handle_new_task(_task)
 
     def get_week_name(self, week_id):
+        """
+        Generates a string form of a week from a given week ID.
+        :param int week_id: ID of the week. Number of weeks since the tracker was first created.
+        :return str: <creation date> + week_id*7 days in human readable form.
+        """
         new_date = self.first_date + datetime.timedelta(days=7*week_id)
         new_date = new_date.strftime("%d %b")  # Prints in format like "14 Sep"
         return str(new_date)
 
     def create_new_task(self, task_name):
+        """
+        Create a new task. Will be created with a week slot for the latest week.
+        :param str task_name: Name of the new task.
+        """
         # Create task with week slot for latest existing week.
         # That week has index self.week_index - 1
         if self.week_index == 0:
@@ -98,10 +111,33 @@ class Tracker(object):
         return archived_tasks
 
     def check_task_name_validity(self, name):
+        """
+        Check whether a task name is already in use.
+        :param str name: Name to check for existence
+        :return bool: True if a task with given name already exists. False otherwise.
+        """
         if name in self.tasks.keys():
             logging.warning("Task with name %s already exists" % name)
+            1/0
             return False
         return True
+
+    def rename_task(self, _task, new_name):
+        """
+        Rename a given task
+        :param task.Task _task: Task to be renamed
+        :param str new_name: New name of the task
+        """
+        old_name = _task.task_name
+        _task.task_name = new_name  # Set the new name
+
+        # Change the name in the tasks dict
+        del self.tasks[old_name]
+        self.tasks[_task.task_name] = _task
+
+        # Change the name in the tasks order list
+        index = self.task_order.index(old_name)
+        self.task_order[index] = new_name
 
     def _handle_new_task(self, _task):
         """
@@ -135,7 +171,7 @@ class Tracker(object):
         :return:
         """
         self.tracker_display.destroy()
-        self.tracker_display = display.TrackerDisplay(self.parent, self)
+        self.tracker_display = tracker_display.TrackerDisplay(self.parent, self)
 
     def save(self):
         """
@@ -157,20 +193,12 @@ class Tracker(object):
         self._get_details_from_datastore()
 
 
-
-if False:#os.listdir(save_folder):
-    filename = save_folder + "newest file in folder"
-    datastore = DataStore(filename)
-else:  # First time use
-    datastore = DataStore()
-
-
-
 root = Tkinter.Tk()
 root.wm_title("Time Tracker")
 root.resizable()
 
 
+datastore = DataStore(save_folder + filename)
 tracker = Tracker(root, datastore)
 
 

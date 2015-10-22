@@ -2,6 +2,7 @@ import logging
 import json
 import task
 import datetime
+import os
 
 """
 Data stored as follows:
@@ -34,7 +35,7 @@ class DataStore(object):
         self.filename = filename
         self.raw_data = {}
 
-        if self.filename:
+        if self.filename and os.path.exists(filename):
             self.load_from_file()
         else:
             self.raw_data['task_order'] = []
@@ -81,7 +82,8 @@ class DataStore(object):
         """
         logging.debug("Loading datastore from file: %s" % self.filename)
         with open(self.filename, 'r') as save_file:
-            self.raw_data = json.loads(save_file)
+            file_contents = ''.join(save_file.readlines())
+            self.raw_data = json.loads(file_contents)
 
     def save_to_file(self):
         """
@@ -90,6 +92,7 @@ class DataStore(object):
         """
         logging.debug("Saving datastore to file: %s" % self.filename)
         json_to_save = json.dumps(self.raw_data)
+
         with open(self.filename, 'w') as save_file:
             save_file.writelines(json_to_save)
 
@@ -179,3 +182,4 @@ class DataStore(object):
         self.save_task_order(tracker.task_order)
 
         print self.raw_data
+        self.save_to_file()

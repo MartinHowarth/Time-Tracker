@@ -57,7 +57,6 @@ class WeekSlot(object):
         manner starting from the 0 index.
         E.g. If len(values) is less than the number of stored values, the last stored values will remain unchanged.
         :param list values: List of floats to overwrite stored values with
-        :return:
         """
         if len(values) > len(self.time_tracked):
             logging.error("Too many values provided for week %d. Expected %d values, got %d" %

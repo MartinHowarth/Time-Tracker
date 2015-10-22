@@ -37,7 +37,6 @@ class Task(object):
                 week_index = self.first_week_id + i
                 self.add_week(week_index, _week)
 
-
     def check_subtask_name_validity(self, name):
         """
         Checks whether a sub task name already exists in this task.
@@ -89,7 +88,7 @@ class Task(object):
 
         if details is None:
             # Add 0 at start for overall task.
-            details = [0] + [0 for _ in self.subtasks]
+            details = [0 for _ in self.subtasks]
         self.weeks.append(weekslot.WeekSlot(week_index, details))
 
     def get_total_time(self):
@@ -122,7 +121,7 @@ class Task(object):
         counter = 0
 
         # Subtask index is actually 1 higher for a week object because the first slot is for the main task entry.
-        subtask_index = self.subtasks.index(subtask_name) + 1
+        subtask_index = self.subtasks.index(subtask_name)
         for _week in self.weeks:
             counter += _week.get_time_in_entry(subtask_index)
 

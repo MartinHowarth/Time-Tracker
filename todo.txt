@@ -5,6 +5,8 @@ Tasks:
     - Able to delete task?
 
 General
+    - Make estimate and gain/slip actually work. I.e. save/load
+
     - Save and reload
         - Save 10 copies, so you can always go back if you make mistake
 
