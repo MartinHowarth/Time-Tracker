@@ -4,19 +4,24 @@ from misc_display_functions import ROW_OFFSET, COLUMN_OFFSET
 
 
 class WeekDisplay(Tkinter.Frame):
+    ROW_HEIGHT = 24
+    ENTRY_ROW_OFFSET = 2
+
     def __init__(self, parent, _week, row_index, column_index):
         """
         Displays a single task/week grid space.
         Has an entry per subtask (and one for the general task).
         :param TrackerDisplay parent: Tkinter Frame within which this frame resides.
         :param weekslot.WeekSlot _week: Datastore that this class will draw.
-        :return:
         """
         logging.debug("Creating display for week %s" % str(_week))
 
         self.parent = parent
         Tkinter.Frame.__init__(self,
                                self.parent)
+
+        for i in range(self.ENTRY_ROW_OFFSET):
+            self.rowconfigure(i, minsize=self.ROW_HEIGHT)
 
         self.row_index = row_index
         self.column_index = column_index
@@ -38,7 +43,6 @@ class WeekDisplay(Tkinter.Frame):
         """
         Creates a new entry field for the new subtask.
         :param float init_time: Initial time for the entry to be filled with.
-        :return:
         """
         new_entry = Tkinter.Entry(self, width=5)
         if init_time != 0:
@@ -50,19 +54,17 @@ class WeekDisplay(Tkinter.Frame):
         """
         Draws this week display object in the correct grid slot of the TrackerDisplay object.
         Also draws the entries for each subtask within this week object.
-        :return:
         """
         self.grid(row=self.row_index + ROW_OFFSET,
                   column=self.column_index + COLUMN_OFFSET,
                   sticky=Tkinter.N)
 
         for index, entry in enumerate(self.entries):
-            entry.grid(row=index)
+            entry.grid(row=index + self.ENTRY_ROW_OFFSET, pady=5)
 
     def update_values(self):
         """
         Gather the values from the displayed entries and put into the week object.
-        :return:
         """
         logging.debug("Updating values for week slot in row %d, column %d" % (self.row_index, self.column_index))
         values = []

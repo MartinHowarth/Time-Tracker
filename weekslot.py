@@ -24,7 +24,7 @@ class WeekSlot(object):
         logging.debug("Adding new blank subtask to a week with index %d" % self.index)
         self.time_tracked.append(0)
 
-    def get_total_time(self):
+    def get_total_time_spent(self):
         """
         Gets the total time tracked in this WeekSlot. This is equivalent to the time tracked against a specific task
         in this week.

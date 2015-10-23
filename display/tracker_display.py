@@ -10,7 +10,6 @@ class TrackerDisplay(Tkinter.Frame):
     def __init__(self, parent, _tracker):
         """
         :param Tkinter.Tk parent: Tkinter root.
-        :return:
         """
         self.tracker = _tracker
 
@@ -139,7 +138,6 @@ class TrackerDisplay(Tkinter.Frame):
         """
         Draws this TrackerDisplay onto the Tkinter root.
         Also draws all of the management buttons in the 0,0 grid slot of this object.
-        :return:
         """
         self.grid(row=0, column=0)
 
@@ -158,11 +156,10 @@ class TrackerDisplay(Tkinter.Frame):
         Trigger re-draw of the entire UI.
         Also gathers the input in all of the entries and stores it.
         :param _: Dummy parameter. Tkinter passes in the event object that we don't care about.
-        :return:
         """
         # Gather the data entered in each entry and store it.
-        for task_display in self.task_displays.itervalues():
-            task_display.gather_input()
+        for _task_display in self.task_displays.itervalues():
+            _task_display.gather_input()
 
         # Trigger redrawing of entire UI
         self.tracker.update()

@@ -38,7 +38,7 @@ class TaskDisplay(Tkinter.Frame):
 
         # Create a button that prompts for a name, then creates a new subtask.
         self.add_new_subtask_button = Tkinter.Button(self,
-                                                     text="New Subtask",
+                                                     text="+Subtask",
                                                      command=prompt_for_value(self.parent,
                                                                               self.add_subtask,
                                                                               "Enter subtask name"))
@@ -47,21 +47,22 @@ class TaskDisplay(Tkinter.Frame):
                                                   text="Hide",
                                                   command=self.archive_self)
 
-        # Create the headers for the total, estimate and gain/slip columns
-        self.total_header = Tkinter.Label(self, text="Total")
+        # Create the headers for the total, estimate and remaining columns
+        self.spent_header = Tkinter.Label(self, text="Spent")
         self.estimate_header = Tkinter.Label(self, text="Estimate")
-        self.gain_slip_header = Tkinter.Label(self, text="Gain/Slip")
+        self.remaining_header = Tkinter.Label(self, text="Remaining")
 
-        # Create the labels/entries for the total, estimate and gain/slip for the entire task.
-        gain = 0
-        self.total_value = Tkinter.Label(self, text=str(self.task.get_total_time()))
+        # Create the labels/entries for the total, estimate and remaining for the entire task.
+        total_spent = self.task.get_total_time_spent()
+        self.spent_value = Tkinter.Label(self, text=str(total_spent))
         self.estimate_entry = Tkinter.Entry(self, width=5)
-        self.gain_value = Tkinter.Label(self, text=str(gain))
+        self.estimate_entry.insert(0, self.task.estimate)
+        self.remaining_value = Tkinter.Label(self, text=str(self.task.estimate - total_spent))
 
         # Create a label for each subtask.
-        self.subtask_labels = []
+        self.subtask_displays = []
         for subtask in self.task.subtasks:
-            self.add_subtask_label(subtask)
+            self.add_subtask_display(subtask)
 
         # Create a set of entries (a week display) for each week this task exists for
         self.week_displays = []
@@ -90,13 +91,13 @@ class TaskDisplay(Tkinter.Frame):
             self.task.add_subtask(name)
             self.parent.update()
 
-    def add_subtask_label(self, name):
+    def add_subtask_display(self, subtask):
         """
         Add a label to describe the subtask.
-        :param str name: Subtask name
+        :param subtask.Subtask subtask: Subtask object.
         :return:
         """
-        self.subtask_labels.append(subtask_display.SubTaskDisplay(self, name))
+        self.subtask_displays.append(subtask_display.SubTaskDisplay(self, subtask))
 
     def add_week(self, _week):
         self.week_displays.append(week_display.WeekDisplay(self.parent, _week, self.row_id, _week.index))
@@ -115,35 +116,34 @@ class TaskDisplay(Tkinter.Frame):
         # Draw archive button next to add subtask button
         self.archive_task_button.grid(row=0, column=1)
 
-        self.total_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET)
-        self.estimate_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET + 1)
-        self.gain_slip_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET + 2)
+        self.estimate_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET)
+        self.spent_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET + 1)
+        self.remaining_header.grid(row=0, column=self.TOTAL_COLUMN_OFFSET + 2)
 
-        self.total_value.grid(row=1, column=self.TOTAL_COLUMN_OFFSET)
-        self.estimate_entry.grid(row=1, column=self.TOTAL_COLUMN_OFFSET + 1)
-        self.gain_value.grid(row=1, column=self.TOTAL_COLUMN_OFFSET + 2)
+        self.estimate_entry.grid(row=1, column=self.TOTAL_COLUMN_OFFSET)
+        self.spent_value.grid(row=1, column=self.TOTAL_COLUMN_OFFSET + 1)
+        self.remaining_value.grid(row=1, column=self.TOTAL_COLUMN_OFFSET + 2)
 
-        for row, _subtask in enumerate(self.subtask_labels):
+        for row, _subtask in enumerate(self.subtask_displays):
             row += self.SUBTASK_ROW_OFFSET
             _subtask.draw(row, self.TOTAL_COLUMN_OFFSET)
 
     def gather_input(self):
         if not self.task.archived:
             logging.debug("Gathering input from entries.")
-            for week_display in self.week_displays:
-                week_display.update_values()
+            for _week_display in self.week_displays:
+                _week_display.update_values()
+
+            try:
+                float_value = float(self.estimate_entry.get())
+            except ValueError:
+                float_value = 0.0
+            self.task.estimate = float_value
+
+            for _subtask_display in self.subtask_displays:
+                _subtask_display.gather_input()
+
+        # Archive the tasks if it has been flagged for archiving
         if self.task.archive_after_update:
             self.task.archived = False
             self.task.archive_after_update = False
-    #
-    # def update_counter(self):
-    #     self._update_to_value(self.task.get_total_time())
-    #
-    # def _update_to_value(self, value):
-    #     """
-    #     Update the label to keep the same name, but with a new value.
-    #     :param float value: Value to display.
-    #     :return:
-    #     """
-    #     self._label_text.set("%s: %d" % (self.task.task_name, value))
-

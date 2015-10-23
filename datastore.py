@@ -1,8 +1,10 @@
 import logging
 import json
 import task
+import subtask
 import datetime
 import os
+from collections import defaultdict
 
 """
 Data stored as follows:
@@ -33,7 +35,7 @@ class DataStore(object):
         :return:
         """
         self.filename = filename
-        self.raw_data = {}
+        self.raw_data = defaultdict(None)
 
         if self.filename and os.path.exists(filename):
             self.load_from_file()
@@ -128,25 +130,45 @@ class DataStore(object):
 
         # Pluck out required information
         first_week_id = raw_task['first_week_id']
-        subtasks = raw_task['subtasks']
+        subtasks_dict = raw_task['subtasks']
         weeks = raw_task['weeks']
         archived = raw_task['archived']
+        estimate = raw_task['estimate']
+
+        subtasks = []
+        for subtask_name, subtask_details in subtasks_dict.iteritems():
+            sub_estimate = subtask_details['estimate']
+            subtasks.append(subtask.Subtask(subtask_name, estimate=sub_estimate))
 
         # Create the new task and store it.
-        return task.Task(task_name, first_week_id, subtasks, weeks, archived)
+        return task.Task(task_name, first_week_id, subtasks, weeks, archived, estimate)
 
     def save_task(self, _task):
         """
         Converts a live instance of a task into an entry in the raw_data dict.
         :param task.Task _task: Task to be stored.
         """
+        subtask_dict = defaultdict(None)
+        for sub in _task.subtasks:
+            subtask_dict[sub.name] = self.generate_subtask_dict(sub)
+
         task_dict = {'archived': _task.archived,
-                     'subtasks': _task.subtasks,
+                     'subtasks': subtask_dict,
                      'first_week_id': _task.first_week_id,
                      'weeks': [week.time_tracked for week in _task.weeks],
+                     'estimate': _task.estimate
                      }
 
         self.raw_data['tasks'][_task.task_name] = task_dict
+
+    def generate_subtask_dict(self, _subtask):
+        """
+        Generates a dict for a subtask in a suitable form for saving
+        :param subtask.Subtask _subtask: Subtask to be stored
+        :return dict: JSON-serializable dict containing all the details of the subtask
+        """
+        sub_dict = {'estimate': _subtask.estimate}
+        return sub_dict
 
     def save_archived_week_index(self, index):
         """

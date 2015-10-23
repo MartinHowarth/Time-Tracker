@@ -1,14 +1,15 @@
 import weekslot
 import logging
+import subtask
 
 
 class Task(object):
-    def __init__(self, name, first_week_id, subtasks=None, weeks=None, archived=False):
+    def __init__(self, name, first_week_id, subtasks=None, weeks=None, archived=False, estimate=0):
         """
         Task object. Stores time tracking about a task for all weeks.
         :param str name: Name of this task
         :param first_week_id: ID of the first week that this task appears.
-        :param list subtasks: Name of each subtask, in order to be displayed.
+        :param list[subtask.Subtask] subtasks: List of each subtask, in order to be displayed.
         :param list weeks: List of lists. Each list is the time spent on
             corresponding subtasks in that week.
         :param bool archived: Whether this task is to be displayed or not.
@@ -18,6 +19,7 @@ class Task(object):
         self.first_week_id = first_week_id
         self.archived = archived
         self.archive_after_update = False
+        self.estimate = estimate
 
         if subtasks is None:
             # If we are creating a new task, initialise an empty list of subtasks
@@ -43,21 +45,22 @@ class Task(object):
         :param str name: Name to check
         :return bool: True if the supplied name doesn't already exist. False if it does.
         """
-        if name in self.subtasks:
+        if name in [sub.name for sub in self.subtasks]:
             logging.warning("A subtask with name %s already exists." % name)
             return False
         return True
 
-    def rename_subtask(self, old_name, new_name):
+    def rename_subtask(self, _subtask, new_name):
         """
         Rename a subtask. Preserves subtask ordering.
-        :param str old_name: Old name of the subtask
+        :param subtask.Subtask _subtask: Subtask to be renamed
         :param str new_name: New name of the subtask
         :return:
         """
         if self.check_subtask_name_validity(new_name):
-            subtask_index = self.subtasks.index(old_name)
-            self.subtasks[subtask_index] = new_name
+            subtask_index = self.subtasks.index(_subtask)
+            self.subtasks[subtask_index].name = new_name
+            _subtask.name = new_name
 
     def add_subtask(self, subtask_name):
         """
@@ -67,7 +70,8 @@ class Task(object):
         :param str subtask_name: Name of new subtask
         :return:
         """
-        self.subtasks.append(subtask_name)
+        new_subtask = subtask.Subtask(subtask_name)
+        self.subtasks.append(new_subtask)
 
         # Add subtask slot to latest week only.
         if self.weeks:
@@ -91,14 +95,14 @@ class Task(object):
             details = [0 for _ in self.subtasks]
         self.weeks.append(weekslot.WeekSlot(week_index, details))
 
-    def get_total_time(self):
+    def get_total_time_spent(self):
         """
         Gets the total time tracked against this task across all weeks and subtasks.
         :return float: Total time tracked
         """
         count = 0
         for _week in self.weeks:
-            count += _week.get_total_time()
+            count += _week.get_total_time_spent()
         return count
 
     def get_total_subtask_times(self):
@@ -106,22 +110,21 @@ class Task(object):
         Gets the time tracked against each subtask across all weeks.
         :return list: List of floats for time tracked against each subtask, in name order
         """
-        counter = [self.get_time_for_subtask(subtask_name) for
-                   subtask_name in self.subtasks]
+        counter = [self.get_time_for_subtask(_subtask) for
+                   _subtask in self.subtasks]
 
         return counter
 
-    def get_time_for_subtask(self, subtask_name):
+    def get_time_for_subtask(self, _subtask):
         """
         Gets the time tracked against a specific subtask across all weeks
-        :param str subtask_name: Subtask name
+        :param subtask.Subtask _subtask: Subtask
         :return float: Time tracked against specific subtask
         """
-        logging.debug("Getting time for subtask %s" % subtask_name)
+        logging.debug("Getting time for subtask %s" % _subtask.name)
         counter = 0
 
-        # Subtask index is actually 1 higher for a week object because the first slot is for the main task entry.
-        subtask_index = self.subtasks.index(subtask_name)
+        subtask_index = self.subtasks.index(_subtask)
         for _week in self.weeks:
             counter += _week.get_time_in_entry(subtask_index)
 
@@ -139,7 +142,7 @@ class Task(object):
             if offset_index > len(self.weeks) - 1:
                 logging.debug("Week has been archived since before week index %d was added." % week_index)
             else:
-                return self.weeks[offset_index].get_total_time()
+                return self.weeks[offset_index].get_total_time_spent()
         return 0
 
     def __repr__(self):
