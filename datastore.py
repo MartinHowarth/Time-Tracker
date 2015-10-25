@@ -35,11 +35,14 @@ class DataStore(object):
         :return:
         """
         self.filename = filename
-        self.raw_data = defaultdict(None)
+
+        self.raw_data = {}
 
         if self.filename and os.path.exists(filename):
             self.load_from_file()
         else:
+            # When adding a new field to data storage, make sure to use raw_task.get(name, default_value)
+            # to ensure back compatibility
             self.raw_data['task_order'] = []
             self.raw_data['tasks'] = {}
             self.raw_data['first_date'] = datetime.datetime.strftime(datetime.datetime.today(), "%Y-%m-%d")
@@ -85,14 +88,20 @@ class DataStore(object):
         logging.debug("Loading datastore from file: %s" % self.filename)
         with open(self.filename, 'r') as save_file:
             file_contents = ''.join(save_file.readlines())
-            self.raw_data = json.loads(file_contents)
 
-    def save_to_file(self):
+            # Make raw_data have default entries of None to cope with old save files.
+            # This allows for adding new entries to the save files.
+            self.raw_data = defaultdict(lambda: None)
+            self.raw_data.update(json.loads(file_contents))
+
+    def save_to_file(self, tracker):
         """
         Saves the raw_data dict to pre-specified filename. Stores in JSON format, according to structure at the top of
         this file.
+        :param tracker.Tracker tracker: Tracker object to store.
         """
         logging.debug("Saving datastore to file: %s" % self.filename)
+        self.update_raw_data(tracker)
         json_to_save = json.dumps(self.raw_data)
 
         with open(self.filename, 'w') as save_file:
@@ -128,20 +137,23 @@ class DataStore(object):
         # Get the raw task dict
         raw_task = self.get_raw_task(task_name)
 
-        # Pluck out required information
+        # Pluck out required information.
+        # When adding a new field to data storage, make sure to use raw_task.get(name, default_value)
+        # to ensure back compatibility
         first_week_id = raw_task['first_week_id']
         subtasks_dict = raw_task['subtasks']
         weeks = raw_task['weeks']
         archived = raw_task['archived']
-        estimate = raw_task['estimate']
 
         subtasks = []
         for subtask_name, subtask_details in subtasks_dict.iteritems():
-            sub_estimate = subtask_details['estimate']
+            # When adding a new field to data storage, make sure to use raw_task.get(name, default_value)
+            # to ensure back compatibility
+            sub_estimate = subtask_details.get('estimate', 0)
             subtasks.append(subtask.Subtask(subtask_name, estimate=sub_estimate))
 
         # Create the new task and store it.
-        return task.Task(task_name, first_week_id, subtasks, weeks, archived, estimate)
+        return task.Task(task_name, first_week_id, subtasks, weeks, archived)
 
     def save_task(self, _task):
         """
@@ -155,8 +167,7 @@ class DataStore(object):
         task_dict = {'archived': _task.archived,
                      'subtasks': subtask_dict,
                      'first_week_id': _task.first_week_id,
-                     'weeks': [week.time_tracked for week in _task.weeks],
-                     'estimate': _task.estimate
+                     'weeks': [week.time_tracked for week in _task.weeks]
                      }
 
         self.raw_data['tasks'][_task.task_name] = task_dict
@@ -191,10 +202,11 @@ class DataStore(object):
         """
         self.raw_data['task_order'] = task_order
 
-    def save_tracker(self, tracker):
+    def update_raw_data(self, tracker):
         """
-        Saves all members of a tracker object.
+        Saves all members of a tracker object to this datastores raw_data.
         :param tracker.Tracker tracker: Tracker object to store.
+        :return:
         """
         for _task in tracker.tasks.itervalues():
             self.save_task(_task)
@@ -203,5 +215,3 @@ class DataStore(object):
         self.save_first_date(tracker.first_date)
         self.save_task_order(tracker.task_order)
 
-        print self.raw_data
-        self.save_to_file()

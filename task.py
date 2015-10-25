@@ -4,7 +4,7 @@ import subtask
 
 
 class Task(object):
-    def __init__(self, name, first_week_id, subtasks=None, weeks=None, archived=False, estimate=0):
+    def __init__(self, name, first_week_id, subtasks=None, weeks=None, archived=False):
         """
         Task object. Stores time tracking about a task for all weeks.
         :param str name: Name of this task
@@ -19,7 +19,6 @@ class Task(object):
         self.first_week_id = first_week_id
         self.archived = archived
         self.archive_after_update = False
-        self.estimate = estimate
 
         if subtasks is None:
             # If we are creating a new task, initialise an empty list of subtasks
@@ -38,6 +37,18 @@ class Task(object):
             for i, _week in enumerate(weeks):
                 week_index = self.first_week_id + i
                 self.add_week(week_index, _week)
+
+    @property
+    def estimate(self):
+        """
+        Gets the cumulative estimate over all subtasks.
+        :return int: Total estimate for all subtasks combined.
+        """
+        est = 0
+        for sub in self.subtasks:
+            est += sub.estimate
+
+        return est
 
     def check_subtask_name_validity(self, name):
         """

@@ -118,7 +118,6 @@ class Tracker(object):
         """
         if name in self.tasks.keys():
             logging.warning("Task with name %s already exists" % name)
-            1/0
             return False
         return True
 
@@ -177,7 +176,7 @@ class Tracker(object):
         """
         Triggers the associated datastore to save all data about this Tracker object.
         """
-        self.datastore.save_tracker(self)
+        self.datastore.save_to_file(self)
 
     def load(self):
         """

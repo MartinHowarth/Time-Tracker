@@ -55,8 +55,7 @@ class TaskDisplay(Tkinter.Frame):
         # Create the labels/entries for the total, estimate and remaining for the entire task.
         total_spent = self.task.get_total_time_spent()
         self.spent_value = Tkinter.Label(self, text=str(total_spent))
-        self.estimate_entry = Tkinter.Entry(self, width=5)
-        self.estimate_entry.insert(0, self.task.estimate)
+        self.estimate_entry = Tkinter.Label(self, text=str(self.task.estimate))
         self.remaining_value = Tkinter.Label(self, text=str(self.task.estimate - total_spent))
 
         # Create a label for each subtask.
@@ -133,12 +132,6 @@ class TaskDisplay(Tkinter.Frame):
             logging.debug("Gathering input from entries.")
             for _week_display in self.week_displays:
                 _week_display.update_values()
-
-            try:
-                float_value = float(self.estimate_entry.get())
-            except ValueError:
-                float_value = 0.0
-            self.task.estimate = float_value
 
             for _subtask_display in self.subtask_displays:
                 _subtask_display.gather_input()
