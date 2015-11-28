@@ -39,15 +39,15 @@ class WeekDisplay(Tkinter.Frame):
         else:
             logging.debug("Not displaying week slot in column %d because it is archived." % self.column_index)
 
-    def add_subtask(self, init_time):
+    def add_subtask(self, init_value):
         """
         Creates a new entry field for the new subtask.
-        :param float init_time: Initial time for the entry to be filled with.
+        :param float init_value: Initial value for the entry to be filled with.
         """
         new_entry = Tkinter.Entry(self, width=5)
-        if init_time != 0:
+        if init_value != 0:
             # insert the supplied value into the entry. Leave blank if value is 0
-            new_entry.insert(0, str(init_time))
+            new_entry.insert(0, str(init_value))
         self.entries.append(new_entry)
 
     def draw(self):
@@ -76,6 +76,7 @@ class WeekDisplay(Tkinter.Frame):
             except ValueError:
                 float_value = 0.0
             values.append(float_value)
+
         self.week.update_values(values)
 
 

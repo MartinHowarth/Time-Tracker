@@ -17,7 +17,7 @@ class Task(object):
         """
         self.task_name = name
         self.first_week_id = first_week_id
-        self.archived = archived
+        self.archived = False
         self.archive_after_update = False
 
         if subtasks is None:
@@ -36,7 +36,12 @@ class Task(object):
         else:
             for i, _week in enumerate(weeks):
                 week_index = self.first_week_id + i
-                self.add_week(week_index, _week)
+                # Make a copy of the list to pass in so we're not using the instance of the list that exists in the
+                # datastore
+                self.add_week(week_index, list(_week))
+
+        # After object has been created correctly, flag whether it should be hidden or not.
+        self.archived = archived
 
     @property
     def estimate(self):

@@ -125,6 +125,7 @@ class TrackerDisplay(Tkinter.Frame):
         """
         Called when the save button is pressed. Triggers Tracker object to save.
         """
+        logging.debug("Saving...")
         self.tracker.save()
 
     def _load(self):
@@ -157,6 +158,7 @@ class TrackerDisplay(Tkinter.Frame):
         Also gathers the input in all of the entries and stores it.
         :param _: Dummy parameter. Tkinter passes in the event object that we don't care about.
         """
+        logging.debug("Updating entire UI...")
         # Gather the data entered in each entry and store it.
         for _task_display in self.task_displays.itervalues():
             _task_display.gather_input()

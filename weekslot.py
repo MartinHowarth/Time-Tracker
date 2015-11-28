@@ -12,7 +12,7 @@ class WeekSlot(object):
         :param list details: Initial values to store. List of floats.
         :return:
         """
-        logging.debug("Creating week with index: %d" % week_index)
+        logging.debug("Creating week with index: %d\twith details: %s" % (week_index, details))
         self.time_tracked = details
         self.index = week_index
 

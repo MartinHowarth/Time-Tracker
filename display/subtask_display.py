@@ -6,7 +6,7 @@ from misc_display_functions import prompt_for_value
 class SubTaskDisplay(object):
     def __init__(self, parent, subtask):
         self.subtask = subtask
-        self.name_label = SubTaskLabel(parent, self.subtask)
+        self.name_button = SubTaskButton(parent, self.subtask)
 
         total_spent = parent.task.get_time_for_subtask(self.subtask)
         self.spent_label = Tkinter.Label(parent, text=str(total_spent))
@@ -22,13 +22,13 @@ class SubTaskDisplay(object):
         self.subtask.estimate = float_value
 
     def draw(self, row, column_offset):
-        self.name_label.grid(row=row, sticky=Tkinter.W)
+        self.name_button.grid(row=row, sticky=Tkinter.W, padx=10)
         self.estimate_entry.grid(row=row, column=column_offset)
         self.spent_label.grid(row=row, column=column_offset + 1)
         self.remaining_label.grid(row=row, column=column_offset + 2)
 
 
-class SubTaskLabel(Tkinter.Button):
+class SubTaskButton(Tkinter.Button):
     def __init__(self, parent_task_display, subtask):
         """
         :param TaskDisplay parent_task_display: Task display object that owns this subtask

@@ -50,7 +50,7 @@ class TaskDisplay(Tkinter.Frame):
         # Create the headers for the total, estimate and remaining columns
         self.spent_header = Tkinter.Label(self, text="Spent")
         self.estimate_header = Tkinter.Label(self, text="Estimate")
-        self.remaining_header = Tkinter.Label(self, text="Remaining")
+        self.remaining_header = Tkinter.Label(self, text="Gain")
 
         # Create the labels/entries for the total, estimate and remaining for the entire task.
         total_spent = self.task.get_total_time_spent()
@@ -111,7 +111,7 @@ class TaskDisplay(Tkinter.Frame):
         # Draw task label in sub-grid that belongs to this task.
         self.task_name.grid(row=1, sticky=Tkinter.W)
         # Draw add subtask button next to label.
-        self.add_new_subtask_button.grid(row=0, column=0)
+        self.add_new_subtask_button.grid(row=0, column=0, sticky=Tkinter.W)
         # Draw archive button next to add subtask button
         self.archive_task_button.grid(row=0, column=1)
 

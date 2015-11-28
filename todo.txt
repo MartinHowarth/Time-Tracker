@@ -1,17 +1,10 @@
-Bugs:
-    - Save archived task. It has lost (some, all?) week slot data
-
 Tasks:
     - Able to delete task?
 
 General
-    - Save and reload
-        - Save 10 copies, so you can always go back if you make mistake
+    - Undo?
 
     - Export as .csv or excel or something that can be imported to excel?
-
-    - Track against budgets
-        - Estimate and revised estimate. E.g. time left when partially through a task
 
     - Add more code comments and logging
 
@@ -19,13 +12,16 @@ General
         - Brings up a form with drop downs for choosing tasks/subtasks and enter time without having to look at the
             actual large panel
 
-
     - Be able to add comments to individual tracking slots
 
     - Real time tracking?
         - with pause
 
     - Change order of tasks
+
+    - Button to add preset time to slot? or on right click
+
+    - button to add slot "back in time"
 
 Collaboration:
     - Notification of new task added

@@ -134,6 +134,7 @@ class DataStore(object):
         :param str task_name: Task name to create a task for.
         :return task.Task: Task object for given task name.
         """
+        logging.debug("Creating task from raw data: %s" % task_name)
         # Get the raw task dict
         raw_task = self.get_raw_task(task_name)
 
@@ -208,6 +209,7 @@ class DataStore(object):
         :param tracker.Tracker tracker: Tracker object to store.
         :return:
         """
+        logging.debug("Updating current datastore data")
         for _task in tracker.tasks.itervalues():
             self.save_task(_task)
 

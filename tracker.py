@@ -54,6 +54,7 @@ class Tracker(object):
         """
         Restore variables to their default values. This allows clean loading of saved data.
         """
+        logging.debug("Tracker: Reinitialising")
         self.tasks = {}  # {task_name: task.Task}
         self.task_order = []  # [task_names]
         self.first_date = None
@@ -65,6 +66,7 @@ class Tracker(object):
         """
         Populate this tracker with details from the datastore.
         """
+        logging.debug("Tracker: Reading from datastore")
         self.first_date = self.datastore.first_date
         self._archived_week_index = self.datastore.archived_week_index
         for task_name in self.datastore.task_order:
@@ -158,6 +160,7 @@ class Tracker(object):
             If it's a new week, then we add a new week slot to each task.
         :return:
         """
+        logging.debug("Tracker: adding week. init_setup: %s" % init_setup)
         if not init_setup:
             for _task in self.tasks.itervalues():
                 _task.add_week(self.week_index)
@@ -201,6 +204,11 @@ datastore = DataStore(save_folder + filename)
 tracker = Tracker(root, datastore)
 
 
+def save_and_exit():
+    tracker.save()
+    exit()
+
+root.protocol("WM_DELETE_WINDOW", save_and_exit)
 root.mainloop()
 
 
