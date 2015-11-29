@@ -111,6 +111,21 @@ class Task(object):
             details = [0 for _ in self.subtasks]
         self.weeks.append(weekslot.WeekSlot(week_index, details))
 
+    def get_internal_week(self, week_index):
+        """
+        Gets the reference to a week (from self.weeks) by global index. Accounts for offset due to not all tasks
+        starting in the same week
+        :param int week_index: Global week index to translate
+        :return week.Week: Internal week.
+        :return None: If that week doesn't exist internally.
+        """
+        offset_index = week_index - self.first_week_id
+        if offset_index > len(self.weeks) - 1:
+            logging.debug("Week has been archived since before week index %d was added." % week_index)
+            return None
+        else:
+            return self.weeks[offset_index]
+
     def get_total_time_spent(self):
         """
         Gets the total time tracked against this task across all weeks and subtasks.
@@ -146,6 +161,20 @@ class Task(object):
 
         return counter
 
+    def get_time_for_subtask_in_week(self, _subtask, week_index):
+        """
+        Gets the time tracked for a given subtask in a given week.
+        :param subtask.Subtask _subtask: Subtask to query
+        :param int week_index: Week to query
+        :return float: Time tracked
+        """
+        subtask_index = self.subtasks.index(_subtask)
+        _week = self.get_internal_week(week_index)
+        if _week is not None:
+            return self.get_internal_week(week_index).get_time_in_entry(subtask_index)
+        else:
+            return 0
+
     def get_time_for_week(self, week_index):
         """
         Gets the total time tracked for a specified week, across all subtasks and the main task entry
@@ -154,12 +183,21 @@ class Task(object):
         """
         logging.debug("Getting time for week %d" % week_index)
         if week_index >= self.first_week_id:
-            offset_index = week_index - self.first_week_id
-            if offset_index > len(self.weeks) - 1:
-                logging.debug("Week has been archived since before week index %d was added." % week_index)
-            else:
-                return self.weeks[offset_index].get_total_time_spent()
+            _week = self.get_internal_week(week_index)
+            if _week is not None:
+                return self.get_internal_week(week_index).get_total_time_spent()
         return 0
+
+    def week_summary(self, week_index):
+        """
+        Generate formatted text containing details of time tracked on this task in a given week.
+        :param int week_index: Week to summarise
+        :return string: Summary of week for this task.
+        """
+        summary = "%s: %s\n" % (self.task_name, self.get_time_for_week(week_index))
+        for _subtask in self.subtasks:
+            summary += "\t%s: %s\n" % (_subtask.name, self.get_time_for_subtask_in_week(_subtask, week_index))
+        return summary
 
     def __repr__(self):
         return str(self)

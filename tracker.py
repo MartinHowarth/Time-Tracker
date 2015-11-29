@@ -194,6 +194,32 @@ class Tracker(object):
 
         self._get_details_from_datastore()
 
+    def create_weekly_summary(self, week_index):
+        """
+        Produces a formatted, human-readable summary of all tasks that had work done on them in a given week.
+        :param int week_index: Index of the week to summarise.
+        :return string: Formatted summary of any tasks that have had changes made in the given week.
+        """
+        summary = ""
+        tasks_to_include = []
+
+        for _name, _task in self.tasks.iteritems():
+            time_spent = _task.get_time_for_week(week_index)
+            if time_spent > 0:
+                tasks_to_include.append(_task)
+
+        summary += "Week beginning: %s\n\n" % self.get_week_name(week_index)
+        for _task in tasks_to_include:
+            summary += _task.week_summary(week_index) + "\n\n"
+
+        return summary
+
+    def copy_week_summary_to_clipboard(self, week_index):
+        self.parent.clipboard_clear()
+        self.parent.clipboard_append(self.create_weekly_summary(week_index))
+
+
+
 
 root = Tkinter.Tk()
 root.wm_title("Time Tracker")

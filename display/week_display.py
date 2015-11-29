@@ -80,7 +80,7 @@ class WeekDisplay(Tkinter.Frame):
         self.week.update_values(values)
 
 
-class WeekLabel(Tkinter.Label):
+class WeekLabel(Tkinter.Button):
     def __init__(self, parent, date_string, column_index):
         """
 
@@ -90,10 +90,11 @@ class WeekLabel(Tkinter.Label):
         :return:
         """
         logging.debug("Creating Label for week %s" % str(date_string))
+        self.parent = parent
 
         # Create the label with a variable text field so we can change it later.
         self.text = Tkinter.StringVar()
-        Tkinter.Label.__init__(self, parent, textvariable=self.text)
+        Tkinter.Button.__init__(self, parent, textvariable=self.text, command=self.copy_summary)
 
         self.date_string = date_string
         self.column_index = column_index
@@ -122,3 +123,9 @@ class WeekLabel(Tkinter.Label):
         :return:
         """
         self.grid(row=0, column=self.column_index + COLUMN_OFFSET)
+
+    def copy_summary(self):
+        """
+        When the week label is clicked, copy a summary of the weeks tracking to the system clipboard.
+        """
+        self.parent.tracker.copy_week_summary_to_clipboard(self.column_index)
