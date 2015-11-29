@@ -111,7 +111,7 @@ class Task(object):
             details = [0 for _ in self.subtasks]
         self.weeks.append(weekslot.WeekSlot(week_index, details))
 
-    def get_internal_week(self, week_index):
+    def get_weekslot(self, week_index):
         """
         Gets the reference to a week (from self.weeks) by global index. Accounts for offset due to not all tasks
         starting in the same week
@@ -119,12 +119,12 @@ class Task(object):
         :return week.Week: Internal week.
         :return None: If that week doesn't exist internally.
         """
-        offset_index = week_index - self.first_week_id
-        if offset_index > len(self.weeks) - 1:
-            logging.debug("Week has been archived since before week index %d was added." % week_index)
-            return None
-        else:
-            return self.weeks[offset_index]
+        for _week in self.weeks:
+            if _week.index == week_index:
+                return _week
+
+        logging.debug("Task has no data for requested week with index: %s" % week_index)
+        return None
 
     def get_total_time_spent(self):
         """
@@ -169,9 +169,9 @@ class Task(object):
         :return float: Time tracked
         """
         subtask_index = self.subtasks.index(_subtask)
-        _week = self.get_internal_week(week_index)
+        _week = self.get_weekslot(week_index)
         if _week is not None:
-            return self.get_internal_week(week_index).get_time_in_entry(subtask_index)
+            return self.get_weekslot(week_index).get_time_in_entry(subtask_index)
         else:
             return 0
 
@@ -183,9 +183,9 @@ class Task(object):
         """
         logging.debug("Getting time for week %d" % week_index)
         if week_index >= self.first_week_id:
-            _week = self.get_internal_week(week_index)
+            _week = self.get_weekslot(week_index)
             if _week is not None:
-                return self.get_internal_week(week_index).get_total_time_spent()
+                return self.get_weekslot(week_index).get_total_time_spent()
         return 0
 
     def week_summary(self, week_index):
