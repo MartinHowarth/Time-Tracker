@@ -6,6 +6,7 @@ General
     - Make "add subtask" button smaller.
     - Add colours to help separate out tasks visually
     - Be able to add comments to individual tracking slots
+    - Week summary to only include non-zero tasks/subtasks
 
 
     - Undo?
