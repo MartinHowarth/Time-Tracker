@@ -1,7 +1,13 @@
 Tasks:
     - Able to delete task?
+    - Able to hide individual subtasks
 
 General
+    - Make "add subtask" button smaller.
+    - Add colours to help separate out tasks visually
+    - Be able to add comments to individual tracking slots
+
+
     - Undo?
 
     - Export as .csv or excel or something that can be imported to excel?
@@ -12,7 +18,6 @@ General
         - Brings up a form with drop downs for choosing tasks/subtasks and enter time without having to look at the
             actual large panel
 
-    - Be able to add comments to individual tracking slots
 
     - Real time tracking?
         - with pause

@@ -9,8 +9,8 @@ from display import tracker_display
 
 # logging.basicConfig(level=logging.DEBUG)
 
-save_folder = ""
-filename = "testing.trk"
+save_folder = "C:\\Users\\mh3\\Documents\\Status reports\\"
+filename = "time_tracker.trk"
 
 
 class Tracker(object):
